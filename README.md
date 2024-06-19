@@ -3,3 +3,6 @@ The following repository is a simple way to create a Nats queue server, and hand
 
 # Doc
 1. https://medium.com/@akinnurun.samuel/comparing-nats-nats-streaming-and-nats-jetstream-121e019feef0
+
+#
+1. chmod a+r nats-server.log

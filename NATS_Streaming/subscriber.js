@@ -1,25 +1,32 @@
 // Importa la biblioteca NATS Streaming
-const { connect, StringCodec } = require('node-nats-streaming');
+const { connect } = require('node-nats-streaming');
 
-const clusterName = 'nats-streaming'
-const clientName = 'subscriber-client'
-const natsHost = 'nats://localhost:4222'
-const chanel = 'foo'
+const clusterName = 'nats-streaming';
+const clientName = 'subscriber-client';
+const natsHost = 'nats://localhost:4222';
+const channel = 'foo';
 
 const sc = connect(clusterName, clientName, {
   url: natsHost,
 });
 
+let subscription;
+
+// Función para manejar la interrupción de Ctrl+C
+process.on('SIGINT', () => {
+  console.log('\nDesconectando...');
+  if (subscription) {
+    subscription.unsubscribe();
+  }
+  sc.close();
+});
 
 sc.on('connect', () => {
   console.log('Conectado al servidor NATS Streaming');
 
   // Subscribe al tema 'foo'
-  //const opts = sc.subscriptionOptions().setDeliverAllAvailable();
-  //const opts = sc.subscriptionOptions().setStartWithLastReceived();
-  //const opts = sc.subscriptionOptions().setStartAtSequence(1);
   const opts = sc.subscriptionOptions().setDeliverAllAvailable();
-  const subscription = sc.subscribe(chanel, opts);
+  subscription = sc.subscribe(channel, opts);
 
   subscription.on('message', (msg) => {
     const sequenceNumber = msg.getSequence();
@@ -29,12 +36,9 @@ sc.on('connect', () => {
     console.log(`Received message: ${message}`);
     console.log(`Sequence Number: ${sequenceNumber}`);
     console.log(`Redelivered: ${redelivered}`);
-    console.log(`chanel: ${subject}`);
+    console.log(`Channel: ${subject}`);
     console.log(`Timestamp: ${new Date(msg.getTimestamp()).toLocaleTimeString()}`);
-  
-    // Confirma el mensaje después de procesarlo
-    //msg.ack();
-});
+  });
 
   subscription.on('error', (err) => {
     console.error(`Error en la suscripción: ${err}`);
@@ -44,13 +48,6 @@ sc.on('connect', () => {
     console.log('Se ha cancelado la suscripción');
     sc.close();
   });
-
-  // Cierra la conexión después de un tiempo
-  setTimeout(() => {
-    console.log('Cerrando conexión');
-    subscription.unsubscribe();
-  }, 60000); // Después de 25 segundos, cancela la suscripción
-
 });
 
 sc.on('close', () => {
