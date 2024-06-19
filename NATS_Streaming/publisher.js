@@ -1,9 +1,14 @@
 // Importa la biblioteca NATS Streaming
-const { connect, StringCodec } = require('node-nats-streaming');
+const { connect } = require('node-nats-streaming');
+
+const clusterName = 'nats-streaming'
+const clientName = 'publisher-client'
+const natsHost = 'nats://localhost:4222'
+const chanel = 'foo'
 
 // Configura la conexión al servidor NATS Streaming
-const sc = connect('nats-streaming', 'publisher-client', {
-  url: 'nats://localhost:4222', // Asegúrate de ajustar el puerto si es necesario
+const sc = connect(clusterName, clientName, {
+  url: natsHost, // Asegúrate de ajustar el puerto si es necesario
 });
 
 sc.on('connect', () => {
@@ -11,9 +16,9 @@ sc.on('connect', () => {
 
   // Función para publicar un mensaje cada 3 segundos
   setInterval(() => {
-    const message = `Mensaje enviado a las ${new Date().toLocaleTimeString()}`;
+    const message = `Hello node-nats-streaming!, Mensaje enviado a las ${new Date().toLocaleTimeString()}`;
     // Simple Publisher (all publishes are async in the node version of the client)
-    sc.publish('foo', 'Hello node-nats-streaming!', (err, guid) => {
+    sc.publish(chanel, message, (err, guid) => {
     if (err) {
         console.log('publish failed: ' + err)
     } else {
