@@ -1,0 +1,14 @@
+{
+  "name": "nats-queue-server",
+  "version": "1.0.0",
+  "description": "The following repository is a simple way to create a Nats queue server, and handle the messages. (publisher/subscriber)",
+  "main": "publisher.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nats": "^2.26.0"
+  }
+}
