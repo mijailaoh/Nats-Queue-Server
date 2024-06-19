@@ -1,3 +1,5 @@
+version: '3.8'
+
 networks:
   monitor-net:
     driver: bridge
@@ -16,3 +18,23 @@ services:
       - ./nats.conf:/etc/nats/nats.conf
     networks:
       - monitor-net
+
+  nats-streaming:
+    image: nats-streaming:latest
+    container_name: nats-streaming
+    restart: always
+    command: [
+      "nats-streaming-server",
+      "--store", "file",
+      "--dir", "/data",
+      "--cluster_id", "test-cluster",
+      "--nats_server", "nats://token_usuario1:password_segura@nats:4222"
+    ]
+    ports:
+      - "4223:4223" # NATS Streaming client port
+    volumes:
+      - ./nats-streaming/data:/data
+    networks:
+      - monitor-net
+    depends_on:
+      - nats

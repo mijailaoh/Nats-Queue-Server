@@ -1,7 +1,7 @@
 const { connect, StringCodec } = require('nats');
 
 // Información de conexión al servidor NATS
-const servers = ['nats://192.168.1.240:4222'];
+const servers = ['nats://192.168.1.170:4222'];
 const opts = {
     user: 'token_usuario1',      // Usuario
     pass: 'password_segura'      // Contraseña

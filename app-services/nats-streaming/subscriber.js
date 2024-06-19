@@ -4,7 +4,7 @@ const { connect, StringCodec } = require('nats');
     try {
         // Configuración de conexión a un servidor NATS con credenciales
         const nc = await connect({
-            servers: "nats://192.168.1.240:4222",
+            servers: "nats://192.168.1.170:4222",
             user: "token_usuario1",         // Usuario para autenticación
             pass: "password_segura"         // Contraseña correspondiente
         });
