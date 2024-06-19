@@ -1,45 +1,47 @@
-const { connect, StringCodec } = require('nats');
+// Importa el cliente NATS Streaming
+const { connect } = require('node-nats-streaming');
 
+// Define la configuración de conexión al servidor NATS Streaming
+const clusterId = 'test-cluster';  // ID del cluster NATS Streaming
+const clientId = 'subscriber-client';  // ID único del cliente
+const serverUrl = 'nats://localhost:4222';  // URL del servidor NATS Streaming
+
+// Crea un cliente NATS Streaming y suscríbete a un canal
 (async () => {
-    try {
-        // Configuración de conexión a un servidor NATS con credenciales
-        const nc = await connect({
-            servers: "nats://192.168.1.170:4222",
-            user: "token_usuario1",         // Usuario para autenticación
-            pass: "password_segura"         // Contraseña correspondiente
-        });
+  // Conecta al servidor NATS Streaming
+  const sc = connect(clusterId, clientId, { url: serverUrl });
 
-        console.log('Conectado al servidor NATS');
+  sc.on('connect', () => {
+    console.log(`Conectado al servidor NATS Streaming en ${serverUrl}`);
 
-        // Crear un codec para decodificar mensajes
-        const sc = StringCodec();
+    // Función para manejar los mensajes recibidos
+    const handleMessage = (msg) => {
+      console.log(`Recibido mensaje en '${msg.getSubject()}': ${msg.getData()}`);
+    };
 
-        // Función para manejar los mensajes recibidos
-        function handleMessage(msg) {
-            console.log(`[Subscribe]: ${sc.decode(msg.data)}`);
-        }
+    // Suscríbete a un canal
+    const channel = 'mi-canal';  // Sustituye con el nombre del canal al que deseas suscribirte
+    const subscription = sc.subscribe(channel, { durableName: 'durable-subscriber' });
 
-        // Crear un suscriptor simple e iterar sobre los mensajes que coinciden con la suscripción
-        const sub = nc.subscribe("subject1");
-        (async () => {
-            for await (const msg of sub) {
-                handleMessage(msg);
-            }
-        })().then(() => {
-            console.log("Suscripción activa a 'subject1'");
-        }).catch((err) => {
-            console.error('Error al suscribirse:', err);
-        });
+    // Maneja los mensajes recibidos
+    subscription.on('message', (msg) => {
+      handleMessage(msg);
+    });
 
-        // Mantener la conexión activa y esperar a que se cierren manualmente
-        process.on('SIGINT', async () => {
-            console.log('Desconectando del servidor NATS de manera ordenada...');
-            await nc.close();
-            console.log('Conexión cerrada');
-            process.exit();
-        });
+    // Manejo de errores y cierre de conexión
+    sc.on('error', (err) => {
+      console.error(`Error en la conexión NATS Streaming: ${err}`);
+    });
 
-    } catch (err) {
-        console.error('Error al conectar al servidor NATS:', err);
-    }
+    sc.on('close', () => {
+      console.log('Conexión cerrada');
+      process.exit();
+    });
+  });
+
+  // Manejo de errores de conexión
+  sc.on('error', (err) => {
+    console.error(`Error en la conexión NATS Streaming: ${err}`);
+    process.exit(1);
+  });
 })();

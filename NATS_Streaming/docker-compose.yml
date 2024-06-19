@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  nats-streaming:
+    image: nats-streaming
+    container_name: nats-streaming
+    hostname: vsblty-nats-server
+    volumes: 
+      - ./nats-logs:/nlogs
+      - ./config:/config
+    ports:
+      - "4222:4222"
+      - "8223:8223"
+    command: ["-m", "8223", "-c", "/config/nats.conf"]

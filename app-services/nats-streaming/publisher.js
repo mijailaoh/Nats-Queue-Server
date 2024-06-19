@@ -1,53 +1,50 @@
-const { connect } = require('node-nats-streaming');
+const { connect, StringCodec } = require('node-nats-streaming');
 
-async function run() {
-  const clusterID = 'test-cluster';
-  const clientID = 'client-1';
-  const servers = 'nats://192.168.1.170:4222';
-  const subject = 'subject-1';
-  const options = {
-    user: 'token_usuario1',
-    pass: 'password_segura'
-  };
+const clusterId = 'test-cluster';
+const clientId = 'publisher-client';
+const serverUrl = 'nats://localhost:4222';
 
+(async () => {
   try {
-    const sc = connect(clusterID, clientID, {
-      servers,
-      ...options
-    });
+    // Conectarse al servidor NATS Streaming
+    const sc = connect(clusterId, clientId, { url: serverUrl });
 
+    // Manejar evento de conexión exitosa
     sc.on('connect', () => {
-      console.log(`Conectado a NATS Streaming cluster ID ${clusterID} como cliente ${clientID}`);
+      console.log(`Conectado al servidor NATS Streaming en ${serverUrl}`);
 
-      // Suscribirse a un canal (subject)
-      const sub = sc.subscribe(subject);
-      sub.on('message', (msg) => {
-        console.log(`[Received] ${msg.getData()}`);
-      });
+      // Función para publicar un mensaje
+      const publishMessage = () => {
+        const subject = 'foo';
+        const data = 'Hello from publisher!';
 
-      // Publicar un mensaje
-      const message = "Hola desde el publisher";
-      sc.publish(subject, message, (err, guid) => {
-        if (err) {
-          console.error('Error al publicar:', err);
-        } else {
-          console.log(`[Published] Mensaje: ${message}, GUID: ${guid}`);
-        }
+        const sc = StringCodec();
+        sc.publish(subject, sc.encode(data), (err, guid) => {
+          if (err) {
+            console.error(`Error al publicar mensaje en '${subject}': ${err}`);
+          } else {
+            console.log(`Mensaje publicado en '${subject}': ${data}, guid: ${guid}`);
+          }
+        });
+      };
+
+      // Publicar un mensaje cada 5 segundos
+      setInterval(publishMessage, 5000);
+
+      // Manejar evento de cierre de conexión
+      sc.on('close', () => {
+        console.log('Conexión cerrada');
+        process.exit();
       });
     });
 
+    // Manejar eventos de error
     sc.on('error', (err) => {
-      console.error('Error al conectar a NATS Streaming:', err);
-    });
-
-    sc.on('close', () => {
-      console.log('Conexión a NATS Streaming cerrada');
-      process.exit();
+      console.error(`Error en la conexión NATS Streaming: ${err}`);
     });
 
   } catch (err) {
-    console.error('Error al conectar a NATS Streaming:', err);
+    console.error(`Error al conectar con NATS Streaming: ${err}`);
+    process.exit(1);
   }
-}
-
-run();
+})();
